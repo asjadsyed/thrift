@@ -65,10 +65,10 @@ class _Lock:
 
 class TTornadoStreamTransport(TTransportBase):
     """a framed, buffered transport over a Tornado stream"""
-    def __init__(self, host, port, stream=None, io_loop=None):
+    def __init__(self, host, port, stream=None):
         self.host = host
         self.port = port
-        self.io_loop = io_loop or ioloop.IOLoop.current()
+        self.io_loop = ioloop.IOLoop.current()
         self.__wbuf = BytesIO()
         self._read_lock = _Lock()
 
@@ -76,7 +76,7 @@ class TTornadoStreamTransport(TTransportBase):
         self.stream = stream
 
     def with_timeout(self, timeout, future):
-        return gen.with_timeout(timeout, future, self.io_loop)
+        return gen.with_timeout(timeout, future)
 
     @gen.coroutine
     def open(self, timeout=None):
@@ -164,8 +164,7 @@ class TTornadoServer(tcpserver.TCPServer):
     @gen.coroutine
     def handle_stream(self, stream, address):
         host, port = address[:2]
-        trans = TTornadoStreamTransport(host=host, port=port, stream=stream,
-                                        io_loop=self.io_loop)
+        trans = TTornadoStreamTransport(host=host, port=port, stream=stream)
         oprot = self._oprot_factory.getProtocol(trans)
 
         try:
